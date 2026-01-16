@@ -24,11 +24,11 @@ const listProductsQuery = `
   }
 `;
 
-exports.handler = async (event) => {
+export async function handler(event) {
   console.log(`EVENT: ${JSON.stringify(event)}`);
 
   try {
-    const secretValue = await fetchSecret();
+    const secretValue = process.env['PRODUCT_CATALOG_SECRET'];
     const products = await fetchProducts();
     const lowStockProducts = products.filter((product) => product.stock !== null && product.stock < LOW_STOCK_THRESHOLD);
 

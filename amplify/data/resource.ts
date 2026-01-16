@@ -1,4 +1,7 @@
-enum UserRole {
+import { defineData } from "@aws-amplify/backend";
+
+const branchName = process.env.AWS_BRANCH ?? "sandbox";
+const schema = `enum UserRole {
   ADMIN
   MANAGER
   VIEWER
@@ -59,8 +62,22 @@ type LowStockResponse {
 }
 
 type Query {
-  checkLowStock: LowStockResponse @function(name: "lowstockproducts-${env}") @auth(rules: [
+  checkLowStock: LowStockResponse @function(name: "lowstockproducts-${branchName}") @auth(rules: [
     { allow: private, provider: iam },
     { allow: public, provider: apiKey }
   ])
 }
+`;
+
+export const data = defineData({
+    migratedAmplifyGen1DynamoDbTableMappings: [{
+            //The "branchname" variable needs to be the same as your deployment branch if you want to reuse your Gen1 app tables
+            branchName: "gen2-main",
+            modelNameToTableNameMapping: { User: "User-mmmv7rrx6bhnbdicoi3aa6nmcq-main", Product: "Product-mmmv7rrx6bhnbdicoi3aa6nmcq-main", Comment: "Comment-mmmv7rrx6bhnbdicoi3aa6nmcq-main" }
+        }],
+    authorizationModes: {
+        defaultAuthorizationMode: "iam",
+        apiKeyAuthorizationMode: { expiresInDays: 7 }
+    },
+    schema
+});

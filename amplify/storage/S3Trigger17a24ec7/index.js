@@ -20,7 +20,7 @@ function updateProductImageUploadedAtMutation(productId, date) {
   return `mutation ProductImageUploadedAtMutation { updateProduct(input: {id: "${productId}", imageUploadedAt: "${date}"}) { id } }`;
 }
 
-exports.handler = async function (event) {
+export async function handler(event) {
   console.log('Received S3 event:', JSON.stringify(event, null, 2));
   const key = event.Records[0].s3.object.key;
 
