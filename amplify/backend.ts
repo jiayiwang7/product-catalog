@@ -5,7 +5,8 @@ import { S3Trigger17a24ec7 } from "./storage/S3Trigger17a24ec7/resource";
 import { lowstockproducts } from "./function/lowstockproducts/resource";
 import { defineBackend } from "@aws-amplify/backend";
 import { Duration, aws_iam } from "aws-cdk-lib";
-
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 
 const backend = defineBackend({
     auth,
@@ -92,3 +93,16 @@ backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(new aws_iam
     actions: ['appsync:GraphQL'],
     resources: [`arn:aws:appsync:${backend.data.stack.region}:${backend.data.stack.account}:apis/mmmv7rrx6bhnbdicoi3aa6nmcq/*`]
 }))
+
+const alertStack = backend.createStack('LowStockAlerts');
+
+const alertTopic = new sns.Topic(alertStack, 'LowStockAlertTopic');
+alertTopic.addSubscription(
+    new subscriptions.EmailSubscription('jiayi.j.wang+amplify1@gmail.com')
+);
+
+// Grant Lambda permission to publish
+alertTopic.grantPublish(backend.lowstockproducts.resources.lambda);
+
+// Pass topic ARN to Lambda
+backend.lowstockproducts.addEnvironment('ALERT_TOPIC_ARN', alertTopic.topicArn);

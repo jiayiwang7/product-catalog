@@ -3,6 +3,7 @@ const { defaultProvider } = require('@aws-sdk/credential-provider-node');
 const { SignatureV4 } = require('@aws-sdk/signature-v4');
 const { HttpRequest } = require('@aws-sdk/protocol-http');
 const { SSMClient, GetParametersCommand } = require('@aws-sdk/client-ssm');
+const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
 
 const Sha256 = crypto.Sha256;
 
@@ -34,6 +35,15 @@ export async function handler(event) {
 
     console.log(`Found ${lowStockProducts.length} low stock products`);
 
+    if (lowStockProducts.length > 0) {
+      const sns = new SNSClient({ region: AWS_REGION });
+      await sns.send(new PublishCommand({
+        TopicArn: process.env.ALERT_TOPIC_ARN,
+        Subject: 'Low Stock Alert',
+        Message: JSON.stringify(lowStockProducts, null, 2)
+      }));
+    }
+    
     return {
       message: `Checked ${products.length} products, found ${lowStockProducts.length} low stock items (secret value: ${secretValue})`,
       lowStockProducts: lowStockProducts.map((p) => ({
